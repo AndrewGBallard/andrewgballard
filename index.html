@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andrew Ballard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div class="octogram">
+            <div class="line zero"></div>
+            <div class="line one"></div>
+            <div class="line zero"></div>
+            <div class="line one"></div>
+            <div class="line one"></div>
+            <div class="line zero"></div>
+            <div class="line one"></div>
+            <div class="line zero"></div>
+        </div>
+        <h1>Andrew Ballard</h1>
+        <div class="nickname-container">
+            <span id="nickname"></span><span class="cursor">_</span>
+        </div>
+    </main>
+
+    <script>
+        const nicknames = ["Amatuer Purveyor of Economics", "Bad Engineering " +
+          "at it's finest", "Clueless", "Font of Depression", "Hang on to " +
+          "your hats!"];
+        let index = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const speed = 150;
+        const delay = 2000;
+
+        function type() {
+            const current = nicknames[index];
+            const display = document.getElementById("nickname");
+
+            if (isDeleting) {
+                charIndex--;
+            } else {
+                charIndex++;
+            }
+
+            display.textContent = current.substring(0, charIndex);
+
+            let typeSpeed = speed;
+            if (isDeleting) typeSpeed /= 2;
+
+            if (!isDeleting && charIndex === current.length) {
+                isDeleting = true;
+                typeSpeed = delay;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                index = (index + 1) % nicknames.length;
+            }
+
+            setTimeout(type, typeSpeed);
+        }
+
+        document.addEventListener("DOMContentLoaded", type);
+    </script>
+</body>
+</html>
