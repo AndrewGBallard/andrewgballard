@@ -24,6 +24,11 @@
         </div>
     </main>
 
+    <div id="sidebar" class="sidebar">
+        <button id="sidebar-toggle" class="sidebar-toggle">&gt;</button>
+        <a href="geometry-sim.html">// Geometry Sim</a>
+    </div>
+
     <script>
         const nicknames = ["Amateur Purveyor of Economics", "Bad Engineering " +
           "at its finest", "Clueless", "Font of Depression", "Hang on to " +
@@ -60,7 +65,21 @@
             setTimeout(type, typeSpeed);
         }
 
-        document.addEventListener("DOMContentLoaded", type);
+        document.addEventListener("DOMContentLoaded", () => {
+            type();
+
+            const sidebar = document.getElementById("sidebar");
+            const toggleBtn = document.getElementById("sidebar-toggle");
+
+            toggleBtn.addEventListener("click", () => {
+                sidebar.classList.toggle("expanded");
+                if (sidebar.classList.contains("expanded")) {
+                    toggleBtn.textContent = "_<";
+                } else {
+                    toggleBtn.textContent = ">";
+                }
+            });
+        });
     </script>
 </body>
 </html>
