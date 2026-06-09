@@ -1,0 +1,140 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: black;
+    font-family: "Courier New", Courier, monospace;
+}
+
+#sim-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 200px;
+    background: rgba(0, 0, 0, 0.8);
+    border-left: 1px solid #00ff00;
+    transform: translateX(100%);
+    transition: transform 0.3s;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 10px 20px 10px;
+    box-sizing: border-box;
+    gap: 30px;
+}
+
+.sidebar.expanded {
+    transform: translateX(0);
+}
+
+.sidebar-toggle {
+    position: absolute;
+    left: -40px;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    background: black;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    border-right: none;
+    font-family: inherit;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar a {
+    color: #00ff00;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    text-decoration: underline;
+}
+
+.control-panel {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.control-group span {
+    color: #00ff00;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.control-group input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: #2b2b2b;
+    height: 4px;
+    border-radius: 2px;
+    outline: none;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #00ff00;
+    cursor: pointer;
+    box-shadow: 0 0 5px #00ff00;
+}
+
+.tiny-octogram {
+    position: fixed;
+    top: 25px;
+    left: 25px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.tiny-octogram .line {
+    height: 3px;
+    width: 30px;
+    background-color: #00ff00;
+    box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+}
+
+.tiny-octogram .one {
+    background-color: transparent;
+    box-shadow: none;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tiny-octogram .one::before, .tiny-octogram .one::after {
+    content: "";
+    height: 100%;
+    width: 45%;
+    background-color: #00ff00;
+    box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+}

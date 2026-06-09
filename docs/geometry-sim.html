@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Sim</title>
+    <link rel="stylesheet" href="geometry-sim.css">
+</head>
+<body>
+    <canvas id="sim-canvas"></canvas>
+
+    <div class="tiny-octogram">
+        <div class="line zero"></div>
+        <div class="line one"></div>
+        <div class="line zero"></div>
+        <div class="line one"></div>
+        <div class="line one"></div>
+        <div class="line zero"></div>
+        <div class="line one"></div>
+        <div class="line zero"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <button id="sidebar-toggle" class="sidebar-toggle">&gt;</button>
+        
+        <div class="control-panel">
+            <div class="control-group">
+                <span id="label-points">Points: 8</span>
+                <input type="range" id="slider-points" min="0" max="5" value="4" step="1">
+            </div>
+            <div class="control-group">
+                <span id="label-speed">Speed: 1.0x</span>
+                <input type="range" id="slider-speed" min="0" max="5" value="1.0" step="0.1">
+            </div>
+            <div class="control-group">
+                <span id="label-inner">Inner: 0.6</span>
+                <input type="range" id="slider-inner" min="0" max="1" value="0.6" step="0.05">
+            </div>
+            <div class="control-group">
+                <span id="label-outer">Outer: 1.1</span>
+                <input type="range" id="slider-outer" min="0" max="2" value="1.1" step="0.05">
+            </div>
+        </div>
+
+        <a href="index.html">// Home</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('sim-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const fibSequence = [1, 2, 3, 5, 8, 13];
+        let particleCount = fibSequence[4];
+        let speed = 1.0;
+        let innerRadius = 0.6;
+        let outerRadius = 1.1;
+        let particles = [];
+
+        let dists = [];
+        let pairHasTriangle = [];
+
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('expanded');
+            toggleBtn.textContent = sidebar.classList.contains('expanded') ? '_<' : '>';
+        });
+
+        const sliderConfig = [
+            { id: 'points', action: v => { particleCount = fibSequence[v]; initParticles(); }, format: v => `Points: ${fibSequence[v]}` },
+            { id: 'speed', action: v => speed = parseFloat(v), format: v => `Speed: ${parseFloat(v).toFixed(1)}x` },
+            { id: 'inner', action: v => innerRadius = parseFloat(v), format: v => `Inner: ${parseFloat(v).toFixed(2)}` },
+            { id: 'outer', action: v => outerRadius = parseFloat(v), format: v => `Outer: ${parseFloat(v).toFixed(2)}` }
+        ];
+
+        sliderConfig.forEach(s => {
+            const input = document.getElementById(`slider-${s.id}`);
+            const label = document.getElementById(`label-${s.id}`);
+            input.addEventListener('input', () => {
+                s.action(input.value);
+                label.textContent = s.format(input.value);
+            });
+        });
+
+        function initParticles() {
+            particles = Array.from({ length: particleCount }, () => ({
+                x: Math.random() * 1.6 - 0.8,
+                y: Math.random() * 1.6 - 0.8,
+                vx: Math.random() * 0.01 - 0.005,
+                vy: Math.random() * 0.01 - 0.005
+            }));
+
+            dists = Array.from({ length: particleCount }, () => new Float32Array(particleCount));
+            pairHasTriangle = Array.from({ length: particleCount }, () => new Uint8Array(particleCount));
+        }
+
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resize);
+
+        const mapX = (x) => (x + 1.0) / 2.0 * window.innerWidth;
+        const mapY = (y) => (1.0 - y) / 2.0 * window.innerHeight;
+
+        function tick() {
+            const n = particles.length;
+
+            for (let i = 0; i < n; i++) {
+                const p = particles[i];
+                p.x += p.vx * speed;
+                p.y += p.vy * speed;
+
+                if (p.x <= -1.0 || p.x >= 1.0) {
+                    p.vx *= -1.0;
+                    p.x = Math.max(-1.0, Math.min(1.0, p.x));
+                }
+                if (p.y <= -1.0 || p.y >= 1.0) {
+                    p.vy *= -1.0;
+                    p.y = Math.max(-1.0, Math.min(1.0, p.y));
+                }
+            }
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    dists[i][j] = d;
+                    dists[j][i] = d;
+                }
+                pairHasTriangle[i].fill(0);
+            }
+
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 1;
+
+            ctx.setLineDash([]);
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const dist_ij = dists[i][j];
+
+                    if (dist_ij < innerRadius) {
+                        for (let k = 0; k < n; k++) {
+                            if (k === i || k === j) continue;
+
+                            const dist_ik = dists[i][k];
+                            if (dist_ik >= outerRadius) continue;
+
+                            const dist_jk = dists[j][k];
+                            if (dist_jk < outerRadius && i < k) {
+                                pairHasTriangle[i][j] = 1;
+                                pairHasTriangle[j][i] = 1;
+
+                                const maxDist = Math.max(dist_ij, dist_ik, dist_jk);
+                                const triOpacity = Math.max(0, Math.min(1, 1.0 - (maxDist / outerRadius)));
+                                
+                                ctx.beginPath();
+                                ctx.moveTo(mapX(particles[i].x), mapY(particles[i].y));
+                                ctx.lineTo(mapX(particles[j].x), mapY(particles[j].y));
+                                ctx.lineTo(mapX(particles[k].x), mapY(particles[k].y));
+                                ctx.closePath();
+                                ctx.globalAlpha = triOpacity * 0.6;
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+            }
+
+            ctx.setLineDash([2, 4]);
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const dist_ij = dists[i][j];
+                    if (dist_ij < innerRadius && !pairHasTriangle[i][j]) {
+                        const pairOpacity = Math.max(0, Math.min(1, 1.0 - (dist_ij / innerRadius)));
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(mapX(particles[i].x), mapY(particles[i].y));
+                        ctx.lineTo(mapX(particles[j].x), mapY(particles[j].y));
+                        ctx.globalAlpha = pairOpacity * 0.4;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            ctx.globalAlpha = 1.0;
+
+            ctx.fillStyle = '#00ff00';
+            for (let i = 0; i < n; i++) {
+                ctx.beginPath();
+                ctx.arc(mapX(particles[i].x), mapY(particles[i].y), 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        resize();
+        initParticles();
+        requestAnimationFrame(tick);
+    </script>
+</body>
+</html>
